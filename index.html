@@ -343,16 +343,16 @@ function gradeSmall(s){
 // ── ドリル生成 ─────────────────────────────────────────
 function buildDrills(D){
   const drills=[],n=k=>{const v=parseFloat(D[k]);return isNaN(v)?null:v;};
-  const bs=n("batSpeedKph");if(bs!==null&&bs<113)drills.push({p:"HIGH",t:"Bat Speed — Heavy/Lite Bat Training",c:`Current ${bs} km/h is below MLB average (113 km/h). Alternate heavy (+4oz) and light (-4oz) bats, 10 swings each, 3x/week to raise your speed ceiling.`});
-  const op=n("onPlane");if(op!==null&&op<70)drills.push({p:"HIGH",t:"On-Plane Efficiency — Pivot Drill",c:`On-Plane at ${op}% is below MLB standard (71%). Reset hip-first sequencing with 20 Pivot Drill swings per day.`});
-  const ba=n("batAngle");if(ba!==null&&ba>-20)drills.push({p:"MED",t:"Bat Angle — Barrel Path Drill",c:`Bat angle at ${ba}° is above MLB average (-25°). Focus on keeping the barrel below the hands longer through the zone. Use tee drills with a focus on maintaining barrel angle through contact.`});
-  const aa=n("attackAngle");if(aa!==null&&aa<5)drills.push({p:"MED",t:"Attack Angle — Tee Low-High Drill",c:`Attack angle at ${aa}° is too low. Raise tee height from hip to shoulder level to build upward swing feel. Target: +8 to +12°.`});
-  const bf=n("bodyFatPct");if(bf!==null&&bf>18)drills.push({p:"MED",t:"Body Composition — Nutrition Management",c:`Body fat at ${bf}% exceeds MLB average (~15%). Optimize fat and carb timing, add aerobic work to reduce body fat and improve power-to-weight ratio.`});
-  const la=n("launchAngle");if(la!==null&&la<12)drills.push({p:"MED",t:"Launch Angle — Elevated Tee Drill",c:`Launch angle at ${la}° is below the line-drive zone (15–24°). Set the tee high and repeat until the trajectory improves.`});
-  const fm=n("ffmi");if(fm!==null&&fm<22.5)drills.push({p:"MED",t:"Lean Mass — Strength Training",c:`FFMI at ${fm} is below MLB reference (22.5). Focus on compound lifts (squat, deadlift, bench) 3–4x/week to build lean mass and power base.`});
+  const bs=n("batSpeedKph");if(bs!==null&&bs<113)drills.push({p:"HIGH",t:"Bat Speed — Heavy/Lite Bat Training",c:`現在${bs}km/hはMLB平均（113km/h）を下回っています。重いバット（+4oz）と軽いバット（-4oz）を交互に各10スイング、週3回実施。神経系を刺激してスピードの上限を引き上げます。`});
+  const op=n("onPlane");if(op!==null&&op<70)drills.push({p:"HIGH",t:"On-Plane Efficiency — Pivot Drill",c:`オンプレーン効率${op}%はMLB基準（71%）を下回っています。骨盤先行のシーケンスをリセットし、Pivot Drillを1日20スイング実施してください。`});
+  const ba=n("batAngle");if(ba!==null&&ba>-20)drills.push({p:"MED",t:"Bat Angle — Barrel Path Drill",c:`バット角度${ba}°はMLB平均（-25°）からずれています。ゾーン内でバレルを手よりも下に長くキープする意識を持ち、コンタクトまでのバレル角度を維持するティードリルを実施してください。`});
+  const aa=n("attackAngle");if(aa!==null&&aa<5)drills.push({p:"MED",t:"Attack Angle — Tee Low-High Drill",c:`アタックアングル${aa}°は低すぎます。ティーを腰の高さから肩の高さへ上げ、アッパー方向のスイング感覚を養いましょう。目標は+8〜+12°です。`});
+  const bf=n("bodyFatPct");if(bf!==null&&bf>18)drills.push({p:"MED",t:"Body Composition — Nutrition Management",c:`体脂肪率${bf}%はMLB平均（約15%）を超えています。脂質・糖質の摂取タイミングを最適化し、有酸素運動を加えて体脂肪を削減。パワーウェイトレシオの改善につながります。`});
+  const la=n("launchAngle");if(la!==null&&la<12)drills.push({p:"MED",t:"Launch Angle — Elevated Tee Drill",c:`打球角度${la}°はライナー帯（15〜24°）に届いていません。ティーを高めに設定し、打球軌道が改善されるまで反復練習してください。`});
+  const fm=n("ffmi");if(fm!==null&&fm<22.5)drills.push({p:"MED",t:"Lean Mass — Strength Training",c:`FFMI ${fm}はMLB目安（22.5）を下回っています。スクワット・デッドリフト・ベンチプレスを中心に週3〜4回のウエイトトレーニングで除脂肪体重を増やし、パワーの土台を強化しましょう。`});
   const tA=calcAsym(D.trunkL,D.trunkR);
-  if(tA!==null&&tA>15)drills.push({p:"HIGH",t:"Trunk Rotation Asymmetry",c:`Trunk Rotation asymmetry is ${tA}% (target: under 10%). Use Pallof Press and cable rotations on the weaker side to close the gap — directly impacts rotational power at the plate.`});
-  if(!drills.length)drills.push({p:"GOOD",t:"All Metrics at MLB Standard",c:"All metrics are within target range. Focus on game-situation batting to build consistency, then retest in 2–3 weeks."});
+  if(tA!==null&&tA>15)drills.push({p:"HIGH",t:"Trunk Rotation Asymmetry",c:`Trunk Rotationの左右差が${tA}%あります（目標：10%以内）。劣位側のPallof Pressやケーブルローテーションを重点的に実施し、差を縮めてください。打席での回転力に直結します。`});
+  if(!drills.length)drills.push({p:"GOOD",t:"All Metrics at MLB Standard",c:"すべての指標が目標値内に収まっています。試合形式のバッティング練習で再現性を高め、2〜3週間後にリテストを実施してください。"});
   return drills;
 }
 const PC={HIGH:"#ef4444",MED:"#f59e0b",GOOD:"#22c55e"},PL={HIGH:"Priority",MED:"Recommended",GOOD:"Maintain"};
