@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>BATTING ASSESSMENT</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#020d1a;font-family:'Hiragino Sans','Yu Gothic',sans-serif;color:#f1f5f9;font-size:14px;}
+input,textarea{background:#0f172a;border:1px solid #334155;border-radius:6px;color:#f1f5f9;padding:8px 10px;font-size:13px;font-family:inherit;outline:none;width:100%;}
+input:focus,textarea:focus{border-color:#38bdf8;}
+button{cursor:pointer;font-family:inherit;}
+table{border-collapse:collapse;width:100%;}
+.hdr{background:linear-gradient(135deg,#0a1628,#0d2035);border-bottom:1px solid #1e3a5f;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.card{background:#0a1628;border:1px solid #1e3a5f;border-radius:12px;padding:20px;margin-bottom:16px;}
+.sec-title{color:#38bdf8;font-size:10px;font-weight:700;letter-spacing:2px;border-bottom:1px solid #1e3a5f;padding-bottom:5px;margin-bottom:14px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.flabel{color:#64748b;font-size:11px;font-weight:600;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.frow{display:flex;gap:6px;align-items:center;}
+.funit{color:#475569;font-size:11px;min-width:34px;white-space:nowrap;}
+.fhint{color:#334155;font-size:9px;margin-top:2px;}
+.stat-card{background:#0d1f35;border-radius:8px;padding:8px 10px;}
+.stat-label{color:#475569;font-size:8px;margin-bottom:3px;}
+.stat-val{font-family:monospace;font-weight:700;font-size:15px;}
+.drill-card{background:#0f172a;border:1px solid #1e3a5f;border-radius:8px;padding:12px 14px;margin-bottom:10px;}
+.badge{border-radius:4px;padding:2px 8px;font-size:9px;font-weight:700;}
+.tab-btn{border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;border-width:1px;border-style:solid;cursor:pointer;}
+.main{max-width:800px;margin:0 auto;padding:20px 16px;}
+.hero{background:linear-gradient(135deg,#0a1628,#0d2035);border:1px solid #1e3a5f;border-radius:12px;padding:22px 26px;margin-bottom:16px;}
+.lr-label{color:#475569;font-size:10px;font-weight:600;margin-bottom:3px;}
+/* スコアグレード */
+.grade{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;font-size:13px;font-weight:900;font-family:monospace;}
+@media print{.no-print{display:none!important;}}
+</style>
+</head>
+<body>
+
+<div class="hdr no-print">
+  <div>
+    <div style="font-size:9px;color:#38bdf8;letter-spacing:3px;">PERFORMANCE ANALYTICS — MLB COMPARISON</div>
+    <div style="font-size:16px;font-weight:800;margin-top:2px;">BATTING ASSESSMENT</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button onclick="showView('input')" id="btn-input" class="tab-btn" style="background:#38bdf8;color:#020d1a;border-color:#38bdf8;">INPUT</button>
+    <button onclick="showView('report')" id="btn-report" class="tab-btn" style="background:transparent;color:#f59e0b;border-color:#f59e0b;">REPORT</button>
+  </div>
+</div>
+
+<div id="view-input" class="main">
+
+  <!-- 選手情報 + 体組成 -->
+  <div class="card">
+    <div class="sec-title">選手情報 (PLAYER INFO)</div>
+    <div class="grid2">
+      <div><div class="flabel">選手名 (Name)</div><input type="text" id="playerName"/></div>
+      <div><div class="flabel">日付 (Date)</div><input type="date" id="date"/></div>
+      <div><div class="flabel">身長 (Height)</div><div class="frow"><input type="number" step="0.1" id="height"/><span class="funit">cm</span></div></div>
+      <div><div class="flabel">体重 (Body Weight)</div><div class="frow"><input type="number" step="0.1" id="weight"/><span class="funit">kg</span></div></div>
+      <div>
+        <div class="flabel"><span>骨格筋量 (Lean Mass)</span><span id="sc-smm" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="0.1" id="smm" onchange="updateScore('smm')"/><span class="funit">kg</span></div>
+        <div class="fhint">MLB平均: 40 kg</div>
+      </div>
+      <div>
+        <div class="flabel"><span>体脂肪率 (Body Fat%)</span><span id="sc-bodyFatPct" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="0.1" id="bodyFatPct" onchange="updateScore('bodyFatPct')"/><span class="funit">%</span></div>
+        <div class="fhint">MLB平均: 15%</div>
+      </div>
+      <div>
+        <div class="flabel"><span>FFMI</span><span id="sc-ffmi" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="0.1" id="ffmi" onchange="updateScore('ffmi')"/><span class="funit"></span></div>
+        <div class="fhint">MLB目安: 22.5</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- スイングセンサー -->
+  <div class="card">
+    <div class="sec-title">スイングセンサー (SWING SENSOR)</div>
+    <div class="grid2">
+      <div>
+        <div class="flabel"><span>バットスピード (Bat Speed)</span><span id="sc-batSpeedKph" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="0.1" id="batSpeedKph" onchange="updateScore('batSpeedKph')"/><span class="funit">km/h</span></div>
+        <div class="fhint">MLB平均: 113 km/h</div>
+      </div>
+      <div>
+        <div class="flabel"><span>アタックアングル (Attack Angle)</span><span id="sc-attackAngle" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="0.1" id="attackAngle" onchange="updateScore('attackAngle')"/><span class="funit">°</span></div>
+        <div class="fhint">MLB平均: 10.5°</div>
+      </div>
+      <div>
+        <div class="flabel"><span>オンプレーン効率 (On-Plane)</span><span id="sc-onPlane" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="0.1" id="onPlane" onchange="updateScore('onPlane')"/><span class="funit">%</span></div>
+        <div class="fhint">MLB平均: 71%</div>
+      </div>
+      <div>
+        <div class="flabel"><span>バット角度 (Bat Angle)</span><span id="sc-batAngle" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="0.1" id="batAngle" onchange="updateScore('batAngle')"/><span class="funit">°</span></div>
+        <div class="fhint">MLB平均: -25°</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 打球弾道 -->
+  <div class="card">
+    <div class="sec-title">打球弾道 (BALL FLIGHT) — HitTrax / Rapsodo</div>
+    <div class="grid2">
+      <div>
+        <div class="flabel"><span>打球速度 (Exit Vel)</span><span id="sc-exitVelKph" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="0.1" id="exitVelKph" onchange="updateScore('exitVelKph')"/><span class="funit">km/h</span></div>
+        <div class="fhint">MLB平均: 143 km/h</div>
+      </div>
+      <div>
+        <div class="flabel"><span>打球角度 (Launch Angle)</span><span id="sc-launchAngle" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="0.1" id="launchAngle" onchange="updateScore('launchAngle')"/><span class="funit">°</span></div>
+        <div class="fhint">MLB平均: 11.5°</div>
+      </div>
+      <div>
+        <div class="flabel"><span>ハードヒット率 (Hard Hit%)</span><span id="sc-hardHitPct" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="0.1" id="hardHitPct" onchange="updateScore('hardHitPct')"/><span class="funit">%</span></div>
+        <div class="fhint">MLB平均: 38%</div>
+      </div>
+      <div>
+        <div class="flabel"><span>最高飛距離 (Max Distance)</span><span id="sc-maxDist" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="1" id="maxDist" onchange="updateScore('maxDist')"/><span class="funit">m</span></div>
+        <div class="fhint">MLB平均: 約96m</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VALD -->
+  <div class="card">
+    <div class="sec-title" style="color:#a78bfa;border-color:#a78bfa44;">VALD</div>
+    <div class="grid2">
+      <div>
+        <div class="flabel" style="color:#a78bfa;"><span>Eccentric Deceleration RFD</span><span id="sc-eccDecRfd" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="1" id="eccDecRfd" onchange="updateScore('eccDecRfd')"/><span class="funit">N</span></div>
+        <div class="fhint">基準値: 50,000 N</div>
+      </div>
+      <div>
+        <div class="flabel" style="color:#a78bfa;"><span>Eccentric Braking RFD</span><span id="sc-eccBrakingRfd" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="1" id="eccBrakingRfd" onchange="updateScore('eccBrakingRfd')"/><span class="funit">N</span></div>
+        <div class="fhint">基準値: 30,000 N</div>
+      </div>
+      <div style="grid-column:1/-1;">
+        <div class="flabel" style="color:#a78bfa;margin-bottom:8px;">
+          <span>Trunk Rotation</span>
+          <span id="trunk-asym-label" style="font-size:10px;font-weight:700;"></span>
+        </div>
+        <div class="grid2">
+          <div>
+            <div class="lr-label">L（左）</div>
+            <div class="frow"><input type="number" step="1" id="trunkL" onchange="updateTrunkAsym();updateTrunkScore()"/><span class="funit">N</span></div>
+          </div>
+          <div>
+            <div class="lr-label">R（右）</div>
+            <div class="frow"><input type="number" step="1" id="trunkR" onchange="updateTrunkAsym();updateTrunkScore()"/><span class="funit">N</span></div>
+          </div>
+        </div>
+        <div style="margin-top:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:#475569;margin-bottom:3px;">
+            <span>Asymmetry</span><span id="trunk-asym-pct" style="font-weight:700;"></span>
+          </div>
+          <div style="height:10px;border-radius:5px;background:#1e3a5f;overflow:hidden;">
+            <div id="trunk-asym-fill" style="height:100%;width:0%;border-radius:5px;background:#22c55e;transition:width 0.3s;"></div>
+          </div>
+        </div>
+        <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:#334155;font-size:9px;">平均値基準: 500 N</span>
+          <span id="sc-trunkAvg" style="font-size:11px;font-weight:900;"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- コーチメモ -->
+  <div class="card">
+    <div class="sec-title">コーチメモ (COACH NOTES)</div>
+    <textarea id="memo" rows="3" placeholder="観察・傾向・特記事項 / Observations, tendencies, notes..."></textarea>
+  </div>
+
+  <button onclick="showView('report')" style="width:100%;background:linear-gradient(135deg,#f59e0b,#d97706);color:#020d1a;border:none;border-radius:8px;padding:13px;font-size:14px;font-weight:800;margin-bottom:24px;">GENERATE REPORT</button>
+</div>
+
+<div id="view-report" class="main" style="display:none;"></div>
+
+<script>
+const MLB={
+  batSpeedKph:{val:113,  label:"バットスピード (Bat Speed)",   unit:"km/h"},
+  attackAngle:{val:10.5, label:"アタックアングル (Attack Angle)", unit:"°"},
+  onPlane:    {val:71,   label:"オンプレーン効率 (On-Plane)",  unit:"%"},
+  batAngle:   {val:-25,  label:"バット角度 (Bat Angle)",        unit:"°"},
+  exitVelKph: {val:143,  label:"打球速度 (Exit Vel)",          unit:"km/h"},
+  launchAngle:{val:11.5, label:"打球角度 (Launch Angle)",      unit:"°"},
+  hardHitPct: {val:38,   label:"ハードヒット率 (Hard Hit%)",   unit:"%"},
+  maxDist:    {val:96,   label:"最高飛距離 (Max Distance)",     unit:"m"},
+  bodyFatPct: {val:15,   label:"体脂肪率 (Body Fat%)",         unit:"%"},
+  smm:        {val:40,   label:"骨格筋量 (Lean Mass)",         unit:"kg"},
+  ffmi:       {val:22.5, label:"FFMI",                         unit:""},
+  eccDecRfd:  {val:50000, label:"Eccentric Deceleration RFD",   unit:"N"},
+  eccBrakingRfd:{val:30000,label:"Eccentric Braking RFD",        unit:"N"},
+  trunkAvg:   {val:500,  label:"Trunk Rotation (Avg)",          unit:"N"},
+};
+
+// ── スコア計算（0〜100） ──────────────────────────────
+function calcScore(k,v){
+  if(!v&&v!==0)return null;
+  const n=parseFloat(v),m=MLB[k]?.val;
+  if(isNaN(n)||!m)return null;
+  // バット角度はマイナス値基準：MLB平均-25°に近いほど高スコア
+  if(k==="batAngle"){
+    const diff=Math.abs(n-m);
+    return Math.min(100,Math.max(0,Math.round(100-diff*3)));
+  }
+  const r=n/m;
+  return Math.min(100,Math.max(0,Math.round(k==="bodyFatPct"?(2-r)*70:r*70)));
+}
+
+// ── S〜Eグレード ──────────────────────────────────────
+// S: 95+  A: 85+  B: 70+  C: 55+  D: 40+  E: <40
+function grade(s){
+  if(s===null)return null;
+  if(s>=95)return"S";
+  if(s>=85)return"A";
+  if(s>=70)return"B";
+  if(s>=55)return"C";
+  if(s>=40)return"D";
+  return"E";
+}
+const GRADE_COLOR={
+  S:"#ffd700", // ゴールド
+  A:"#22c55e", // 緑
+  B:"#38bdf8", // 青
+  C:"#f59e0b", // 黄
+  D:"#fb923c", // オレンジ
+  E:"#ef4444", // 赤
+};
+const GRADE_DESC={
+  S:"エリート / Elite",
+  A:"MLB水準 / MLB Level",
+  B:"標準 / Average",
+  C:"平均以下 / Below Avg",
+  D:"要改善 / Needs Work",
+  E:"要注意 / Critical",
+};
+
+function gradeColor(s){return s===null?"#64748b":GRADE_COLOR[grade(s)]||"#64748b";}
+function gradeLabel(s){
+  if(s===null)return"";
+  const g=grade(s);
+  return`<span style="background:${GRADE_COLOR[g]}22;color:${GRADE_COLOR[g]};border:1px solid ${GRADE_COLOR[g]}55;border-radius:4px;padding:1px 7px;font-size:11px;font-weight:900;font-family:monospace;">${g}</span>`;
+}
+
+function updateScore(k){
+  const v=document.getElementById(k)?.value;
+  const s=calcScore(k,v);
+  const el=document.getElementById("sc-"+k);
+  if(el)el.innerHTML=gradeLabel(s);
+  const inp=document.getElementById(k);
+  if(inp)inp.style.borderColor=s!==null?gradeColor(s)+"88":"#334155";
+}
+
+// ── 非対称性 ──────────────────────────────────────────
+function calcAsym(l,r){
+  const lv=parseFloat(l),rv=parseFloat(r);
+  if(isNaN(lv)||isNaN(rv)||lv===0||rv===0)return null;
+  return Math.round((1-Math.min(lv,rv)/Math.max(lv,rv))*100);
+}
+function asymColor(p){return p===null?"#64748b":p<=10?"#22c55e":p<=15?"#f59e0b":"#ef4444";}
+function asymLabel(p){return p===null?"":p<=10?"Good":p<=15?"Caution":"Needs Work";}
+
+function updateTrunkAsym(){
+  const lv=document.getElementById("trunkL")?.value;
+  const rv=document.getElementById("trunkR")?.value;
+  const pct=calcAsym(lv,rv);
+  const c=asymColor(pct);
+  document.getElementById("trunk-asym-fill").style.width=(pct!==null?Math.min(pct*3,100):0)+"%";
+  document.getElementById("trunk-asym-fill").style.background=c;
+  document.getElementById("trunk-asym-pct").textContent=pct!==null?pct+"%":"—";
+  document.getElementById("trunk-asym-pct").style.color=c;
+  document.getElementById("trunk-asym-label").textContent=pct!==null?asymLabel(pct):"";
+  document.getElementById("trunk-asym-label").style.color=c;
+}
+
+function updateTrunkScore(){
+  const lv=parseFloat(document.getElementById("trunkL")?.value||"");
+  const rv=parseFloat(document.getElementById("trunkR")?.value||"");
+  if(!isNaN(lv)&&!isNaN(rv)){
+    const avg=(lv+rv)/2;
+    const s=calcScore("trunkAvg",avg);
+    const el=document.getElementById("sc-trunkAvg");
+    if(el)el.innerHTML=gradeLabel(s);
+  }
+}
+function getVal(id){return document.getElementById(id)?.value||"";}
+
+function showView(v){
+  document.getElementById("view-input").style.display=v==="input"?"block":"none";
+  document.getElementById("view-report").style.display=v==="report"?"block":"none";
+  const iA=v==="input";
+  document.getElementById("btn-input").style.cssText=`background:${iA?"#38bdf8":"transparent"};color:${iA?"#020d1a":"#38bdf8"};border-color:#38bdf8;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;border-width:1px;border-style:solid;cursor:pointer;`;
+  document.getElementById("btn-report").style.cssText=`background:${!iA?"#f59e0b":"transparent"};color:${!iA?"#020d1a":"#f59e0b"};border-color:#f59e0b;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;border-width:1px;border-style:solid;cursor:pointer;`;
+  if(v==="report")renderReport();
+}
+
+// ── レーダーチャート ──────────────────────────────────
+function radarSVG(D,size=220){
+  const keys=["batSpeedKph","onPlane","batAngle","exitVelKph","hardHitPct","ffmi"];
+  const lbls=["Bat SPD","On-Plane","Bat Angle","Exit Vel","Hard HIT","FFMI"];
+  const cx=size/2,cy=size/2,r=size*0.33;
+  const ang=keys.map((_,i)=>(Math.PI*2*i/keys.length)-Math.PI/2);
+  const norm=(k,v)=>{const m=MLB[k]?.val;return(!m||!v)?0:Math.min(1.3,Math.max(0,parseFloat(v)/m));};
+  const pPts=keys.map((k,i)=>{const n=norm(k,D[k]);return{x:cx+r*n*Math.cos(ang[i]),y:cy+r*n*Math.sin(ang[i])};});
+  const mPts=ang.map(a=>({x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)}));
+  let s=`<svg width="${size}" height="${size}" style="overflow:visible;">`;
+  [0.5,1,1.3].forEach(l=>{const pts=ang.map(a=>`${cx+r*l*Math.cos(a)},${cy+r*l*Math.sin(a)}`).join(" ");s+=`<polygon points="${pts}" fill="none" stroke="${l===1?"#334155aa":"#1e3a5f"}" stroke-width="${l===1?1.5:0.8}"/>`;});
+  ang.forEach(a=>s+=`<line x1="${cx}" y1="${cy}" x2="${cx+r*1.3*Math.cos(a)}" y2="${cy+r*1.3*Math.sin(a)}" stroke="#1e3a5f" stroke-width="0.8"/>`);
+  s+=`<polygon points="${mPts.map(p=>`${p.x},${p.y}`).join(" ")}" fill="#f59e0b10" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3"/>`;
+  s+=`<polygon points="${pPts.map(p=>`${p.x},${p.y}`).join(" ")}" fill="#38bdf828" stroke="#38bdf8" stroke-width="2"/>`;
+  pPts.forEach(p=>s+=`<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="#38bdf8"/>`);
+  ang.forEach((a,i)=>{const lx=cx+(r*1.3+14)*Math.cos(a),ly=cy+(r*1.3+14)*Math.sin(a);s+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" style="font-size:8px;fill:#94a3b8;">${lbls[i]}</text>`;});
+  return s+"</svg>";
+}
+
+// ── ゲージSVG（グレード表示に変更） ─────────────────────
+function gradeBadgeLarge(s){
+  const g=grade(s);
+  const c=gradeColor(s);
+  if(!g)return`<span style="font-size:64px;font-weight:900;color:#475569;font-family:monospace;">—</span>`;
+  return`<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+    <span style="font-size:80px;font-weight:900;color:${c};font-family:monospace;line-height:1;">${g}</span>
+    <span style="font-size:11px;color:${c};font-weight:700;">${GRADE_DESC[g]}</span>
+  </div>`;
+}
+
+function gradeSmall(s){
+  const g=grade(s),c=gradeColor(s);
+  if(!g)return`<span style="color:#334155;font-size:12px;">—</span>`;
+  return`<span style="background:${c}22;color:${c};border:1px solid ${c}55;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:900;font-family:monospace;">${g}</span>`;
+}
+
+// ── ドリル生成 ─────────────────────────────────────────
+function buildDrills(D){
+  const drills=[],n=k=>{const v=parseFloat(D[k]);return isNaN(v)?null:v;};
+  const bs=n("batSpeedKph");if(bs!==null&&bs<113)drills.push({p:"HIGH",t:"Bat Speed — Heavy/Lite Bat Training",c:`Current ${bs} km/h is below MLB average (113 km/h). Alternate heavy (+4oz) and light (-4oz) bats, 10 swings each, 3x/week to raise your speed ceiling.`});
+  const op=n("onPlane");if(op!==null&&op<70)drills.push({p:"HIGH",t:"On-Plane Efficiency — Pivot Drill",c:`On-Plane at ${op}% is below MLB standard (71%). Reset hip-first sequencing with 20 Pivot Drill swings per day.`});
+  const ba=n("batAngle");if(ba!==null&&ba>-20)drills.push({p:"MED",t:"Bat Angle — Barrel Path Drill",c:`Bat angle at ${ba}° is above MLB average (-25°). Focus on keeping the barrel below the hands longer through the zone. Use tee drills with a focus on maintaining barrel angle through contact.`});
+  const aa=n("attackAngle");if(aa!==null&&aa<5)drills.push({p:"MED",t:"Attack Angle — Tee Low-High Drill",c:`Attack angle at ${aa}° is too low. Raise tee height from hip to shoulder level to build upward swing feel. Target: +8 to +12°.`});
+  const bf=n("bodyFatPct");if(bf!==null&&bf>18)drills.push({p:"MED",t:"Body Composition — Nutrition Management",c:`Body fat at ${bf}% exceeds MLB average (~15%). Optimize fat and carb timing, add aerobic work to reduce body fat and improve power-to-weight ratio.`});
+  const la=n("launchAngle");if(la!==null&&la<12)drills.push({p:"MED",t:"Launch Angle — Elevated Tee Drill",c:`Launch angle at ${la}° is below the line-drive zone (15–24°). Set the tee high and repeat until the trajectory improves.`});
+  const fm=n("ffmi");if(fm!==null&&fm<22.5)drills.push({p:"MED",t:"Lean Mass — Strength Training",c:`FFMI at ${fm} is below MLB reference (22.5). Focus on compound lifts (squat, deadlift, bench) 3–4x/week to build lean mass and power base.`});
+  const tA=calcAsym(D.trunkL,D.trunkR);
+  if(tA!==null&&tA>15)drills.push({p:"HIGH",t:"Trunk Rotation Asymmetry",c:`Trunk Rotation asymmetry is ${tA}% (target: under 10%). Use Pallof Press and cable rotations on the weaker side to close the gap — directly impacts rotational power at the plate.`});
+  if(!drills.length)drills.push({p:"GOOD",t:"All Metrics at MLB Standard",c:"All metrics are within target range. Focus on game-situation batting to build consistency, then retest in 2–3 weeks."});
+  return drills;
+}
+const PC={HIGH:"#ef4444",MED:"#f59e0b",GOOD:"#22c55e"},PL={HIGH:"Priority",MED:"Recommended",GOOD:"Maintain"};
+
+// ── レポート描画 ───────────────────────────────────────
+function renderReport(){
+  const ids=["playerName","date","height","batSpeedKph","attackAngle","onPlane","batAngle","exitVelKph","launchAngle","hardHitPct","maxDist","eccDecRfd","eccBrakingRfd","trunkL","trunkR","bodyFatPct","smm","weight","ffmi","memo"];
+  const D={};ids.forEach(id=>D[id]=getVal(id));
+
+  const scores=Object.fromEntries(Object.keys(MLB).map(k=>[k,calcScore(k,D[k])]));
+  const valid=Object.values(scores).filter(s=>s!==null);
+  const ov=valid.length?Math.round(valid.reduce((a,b)=>a+b,0)/valid.length):null;
+  const drills=buildDrills(D);
+
+  // グレード凡例
+  const gradeLegend=Object.entries(GRADE_COLOR).map(([g,c])=>`
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="background:${c}22;color:${c};border:1px solid ${c}55;border-radius:4px;padding:1px 8px;font-size:12px;font-weight:900;font-family:monospace;min-width:22px;text-align:center;">${g}</span>
+      <span style="color:#64748b;font-size:10px;">${GRADE_DESC[g]}</span>
+    </div>`).join("");
+
+  const mlbRows=Object.entries(MLB).map(([k,m],i)=>{
+    const pv=D[k],s=calcScore(k,pv),diff=pv?(parseFloat(pv)-m.val).toFixed(1):null,pos=diff&&parseFloat(diff)>=0;
+    return `<tr style="background:${i%2?"#0d1f35":"transparent"}">
+      <td style="padding:7px 8px;color:#94a3b8;font-size:11px;">${m.label}</td>
+      <td style="padding:7px 8px;color:${pv?"#f1f5f9":"#334155"};font-family:monospace;font-weight:700;font-size:13px;">${pv||"—"}${pv?m.unit:""}</td>
+      <td style="padding:7px 8px;color:#f59e0b;font-size:11px;">${m.val}${m.unit}</td>
+      <td style="padding:7px 8px;font-family:monospace;font-size:11px;color:${diff===null?"#334155":pos?"#22c55e":"#ef4444"};font-weight:700;">${diff?`${pos?"+":""}${diff}`:"—"}</td>
+      <td style="padding:7px 8px;">${gradeSmall(s)}</td>
+    </tr>`;
+  }).join("");
+
+  // VALD非対称バー
+  function asymBarHTML(lv,rv){
+    const pct=calcAsym(lv,rv);
+    const c=asymColor(pct);
+    const dominant=parseFloat(lv)>=parseFloat(rv)?"L dominant":"R dominant";
+    return`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div class="stat-card"><div class="stat-label">L</div><div class="stat-val" style="color:${lv?"#f1f5f9":"#334155"};">${lv||"—"}${lv?" N":""}</div></div>
+      <div class="stat-card"><div class="stat-label">R</div><div class="stat-val" style="color:${rv?"#f1f5f9":"#334155"};">${rv||"—"}${rv?" N":""}</div></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:#475569;margin-bottom:3px;">
+      <span>Asymmetry ${pct!==null?dominant:""}</span>
+      <span style="font-weight:700;color:${c};">${pct!==null?pct+"% "+asymLabel(pct):"—"}</span>
+    </div>
+    <div style="height:10px;border-radius:5px;background:#1e3a5f;overflow:hidden;">
+      <div style="height:100%;width:${pct!==null?Math.min(pct*3,100):0}%;background:${c};border-radius:5px;"></div>
+    </div>`;
+  }
+
+  const sEccDec=calcScore("eccDecRfd",D.eccDecRfd);
+  const sEccBrk=calcScore("eccBrakingRfd",D.eccBrakingRfd);
+  const trunkAvgVal=(parseFloat(D.trunkL||0)+parseFloat(D.trunkR||0))/2||null;
+  const sTrunk=trunkAvgVal?calcScore("trunkAvg",trunkAvgVal):null;
+  const valdSection=`
+    <div class="card" style="border-color:#a78bfa44;">
+      <div class="sec-title" style="color:#a78bfa;border-color:#a78bfa44;">VALD</div>
+      <div class="grid2" style="margin-bottom:16px;">
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="color:#a78bfa;font-size:11px;font-weight:700;">Eccentric Deceleration RFD</span>
+            ${gradeSmall(sEccDec)}
+          </div>
+          <div class="stat-card"><div class="stat-label">Value（基準: 50,000 N）</div><div class="stat-val" style="color:${D.eccDecRfd?"#f1f5f9":"#334155"};">${D.eccDecRfd?Number(D.eccDecRfd).toLocaleString():"—"}${D.eccDecRfd?" N":""}</div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="color:#a78bfa;font-size:11px;font-weight:700;">Eccentric Braking RFD</span>
+            ${gradeSmall(sEccBrk)}
+          </div>
+          <div class="stat-card"><div class="stat-label">Value（基準: 30,000 N）</div><div class="stat-val" style="color:${D.eccBrakingRfd?"#f1f5f9":"#334155"};">${D.eccBrakingRfd?Number(D.eccBrakingRfd).toLocaleString():"—"}${D.eccBrakingRfd?" N":""}</div></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="color:#a78bfa;font-size:11px;font-weight:700;">Trunk Rotation (L vs R)</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="color:#334155;font-size:9px;">平均基準: 500N</span>
+            ${gradeSmall(sTrunk)}
+          </div>
+        </div>
+        ${asymBarHTML(D.trunkL,D.trunkR)}
+      </div>
+    </div>`;
+
+  // VALDをMLB比較テーブルに追加
+  const valdRows=[
+    {label:"Eccentric Deceleration RFD",pv:D.eccDecRfd,ref:50000,unit:"N"},
+    {label:"Eccentric Braking RFD",pv:D.eccBrakingRfd,ref:30000,unit:"N"},
+    {label:"Trunk Rotation (Avg)",pv:trunkAvgVal?trunkAvgVal.toFixed(0):null,ref:500,unit:"N"},
+  ].map(({label,pv,ref,unit},i)=>{
+    const s=pv?Math.min(100,Math.max(0,Math.round(parseFloat(pv)/ref*70))):null;
+    const diff=pv?(parseFloat(pv)-ref).toFixed(0):null;
+    const pos=diff&&parseFloat(diff)>=0;
+    return `<tr style="background:${i%2?"#1a1040":"#140d35"}">
+      <td style="padding:7px 8px;color:#a78bfa;font-size:11px;">${label}</td>
+      <td style="padding:7px 8px;color:${pv?"#f1f5f9":"#334155"};font-family:monospace;font-weight:700;font-size:13px;">${pv?Number(parseFloat(pv)).toLocaleString():"—"}${pv?" "+unit:""}</td>
+      <td style="padding:7px 8px;color:#a78bfa88;font-size:11px;">${ref.toLocaleString()} ${unit}</td>
+      <td style="padding:7px 8px;font-family:monospace;font-size:11px;color:${diff===null?"#334155":pos?"#22c55e":"#ef4444"};font-weight:700;">${diff?`${pos?"+":""}${Number(diff).toLocaleString()}`:"—"}</td>
+      <td style="padding:7px 8px;">${gradeSmall(s)}</td>
+    </tr>`;
+  }).join("");
+  const drillHTML=drills.map(d=>`<div class="drill-card" style="border-left:3px solid ${PC[d.p]};"><div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;"><span class="badge" style="background:${PC[d.p]}22;color:${PC[d.p]};border:1px solid ${PC[d.p]}55;">${PL[d.p]}</span><span style="color:#f59e0b;font-weight:700;font-size:12px;">${d.t}</span></div><div style="color:#94a3b8;font-size:12px;line-height:1.7;">${d.c}</div></div>`).join("");
+
+  document.getElementById("view-report").innerHTML=`
+    <div class="hero">
+      <div style="font-size:9px;color:#38bdf8;letter-spacing:3px;margin-bottom:3px;">BATTING ASSESSMENT REPORT — MLB COMPARISON 2024</div>
+      <div style="font-size:24px;font-weight:900;margin-bottom:6px;">${D.playerName||"No Name"}</div>
+      <div style="color:#475569;font-size:12px;">${D.date||""}</div>
+      <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;">
+        ${D.height?`<span style="color:#64748b;font-size:11px;">身長 <span style="color:#94a3b8;font-weight:700;">${D.height} cm</span></span>`:""}
+        ${D.weight?`<span style="color:#64748b;font-size:11px;">体重 <span style="color:#94a3b8;font-weight:700;">${D.weight} kg</span></span>`:""}
+        ${D.smm?`<span style="color:#64748b;font-size:11px;">骨格筋量 <span style="color:#94a3b8;font-weight:700;">${D.smm} kg</span></span>`:""}
+        ${D.bodyFatPct?`<span style="color:#64748b;font-size:11px;">体脂肪率 <span style="color:#94a3b8;font-weight:700;">${D.bodyFatPct}%</span></span>`:""}
+        ${D.ffmi?`<span style="color:#64748b;font-size:11px;">FFMI <span style="color:#94a3b8;font-weight:700;">${D.ffmi}</span></span>`:""}
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+      <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
+        <div style="font-size:9px;color:#94a3b8;letter-spacing:2px;margin-bottom:12px;">総合グレード (OVERALL GRADE)</div>
+        ${gradeBadgeLarge(ov)}
+        <div style="font-size:9px;color:#334155;margin-top:10px;">評価項目 / Items: ${valid.length}/${Object.keys(MLB).length}</div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:9px;color:#94a3b8;letter-spacing:2px;margin-bottom:4px;">RADAR vs MLB AVG</div>
+        ${radarSVG(D)}
+        <div style="font-size:8px;color:#334155;margin-top:2px;"><span style="color:#f59e0b;">---</span> MLB Avg&nbsp;&nbsp;<span style="color:#38bdf8;">——</span> Player</div>
+      </div>
+    </div>
+
+    <!-- グレード凡例 -->
+    <div class="card">
+      <div class="sec-title">グレード基準 (GRADE SCALE)</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+        ${gradeLegend}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">MLB COMPARISON</div>
+      <div style="overflow-x:auto;"><table><thead><tr>${["指標 / Metric","計測値 / Value","MLB平均 / MLB Avg (2024)","差 / Diff","グレード"].map(h=>`<th style="text-align:left;color:#475569;font-weight:600;font-size:9px;padding:5px 8px;border-bottom:1px solid #1e3a5f;">${h}</th>`).join("")}</tr></thead><tbody>${mlbRows}<tr><td colspan="5" style="padding:5px 8px;color:#a78bfa44;font-size:9px;letter-spacing:1px;border-top:1px solid #a78bfa22;">VALD</td></tr>${valdRows}</tbody></table></div>
+    </div>
+
+    ${valdSection}
+
+    <div class="card"><div class="sec-title" style="color:#f59e0b;">DRILL PRESCRIPTION</div>${drillHTML}</div>
+
+    ${D.memo?`<div class="card"><div class="sec-title">コーチメモ (COACH NOTES)</div><div style="color:#94a3b8;font-size:13px;line-height:1.8;white-space:pre-wrap;">${D.memo}</div></div>`:""}
+
+    <div style="background:linear-gradient(135deg,#0d2035,#0a1628);border:1px solid #38bdf830;border-radius:12px;padding:16px 20px;margin-bottom:16px;text-align:center;">
+      <div style="color:#38bdf8;font-size:12px;font-weight:700;margin-bottom:4px;">Test-Retest Model — Next Session</div>
+      <div style="color:#475569;font-size:11px;">Re-assess in 2-3 weeks and track changes in each metric.<br>Cycle: Initial Assessment → Drill Execution → Retest → Re-prescription</div>
+    </div>
+    <button onclick="window.print()" class="no-print" style="width:100%;background:transparent;color:#38bdf8;border:1px solid #38bdf8;border-radius:8px;padding:11px;font-size:12px;font-weight:700;margin-bottom:24px;">PRINT / SAVE AS PDF</button>
+  `;
+}
+</script>
+</body>
+</html>
