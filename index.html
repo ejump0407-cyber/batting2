@@ -182,9 +182,9 @@ table{border-collapse:collapse;width:100%;}
       </div>
     </div>
   </div>
-  <!-- VALD -->
+  <!-- VALD・DynaMo -->
   <div class="card">
-    <div class="sec-title" style="color:#a78bfa;border-color:#a78bfa44;">VALD</div>
+    <div class="sec-title" style="color:#a78bfa;border-color:#a78bfa44;">VALD・DynaMo</div>
     <div class="grid2">
       <div>
         <div class="flabel" style="color:#a78bfa;"><span>Eccentric Deceleration RFD</span><span id="sc-eccDecRfd" style="font-size:11px;font-weight:900;"></span></div>
@@ -224,6 +224,16 @@ table{border-collapse:collapse;width:100%;}
           <span id="sc-trunkAvg" style="font-size:11px;font-weight:900;"></span>
         </div>
       </div>
+      <div>
+        <div class="flabel" style="color:#a78bfa;"><span>Isometric Mid-Thigh Pull</span><span id="sc-imtp" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="1" id="imtp" onchange="updateScore('imtp')"/><span class="funit">N</span></div>
+        <div class="fhint">基準値: 4,000 N</div>
+      </div>
+      <div>
+        <div class="flabel" style="color:#a78bfa;"><span>Plyometric Push UP</span><span id="sc-plyoPushUp" style="font-size:11px;font-weight:900;"></span></div>
+        <div class="frow"><input type="number" step="1" id="plyoPushUp" onchange="updateScore('plyoPushUp')"/><span class="funit">N</span></div>
+        <div class="fhint">基準値: 1,500 N</div>
+      </div>
     </div>
   </div>
 
@@ -256,6 +266,8 @@ const MLB={
   eccDecRfd:  {val:50000, label:"Eccentric Deceleration RFD",   unit:"N"},
   eccBrakingRfd:{val:30000,label:"Eccentric Braking RFD",        unit:"N"},
   trunkAvg:   {val:500,  label:"Trunk Rotation (Avg)",          unit:"N"},
+  imtp:       {val:4000, label:"Isometric Mid-Thigh Pull",       unit:"N"},
+  plyoPushUp: {val:1500, label:"Plyometric Push UP",              unit:"N"},
 };
 
 // ── スコア計算（0〜100） ──────────────────────────────
@@ -415,7 +427,7 @@ const PC={HIGH:"#ef4444",MED:"#f59e0b",GOOD:"#22c55e"},PL={HIGH:"Priority",MED:"
 
 // ── レポート描画 ───────────────────────────────────────
 function renderReport(){
-  const ids=["playerName","date","height","eyeHorizontal","eyeDiagonal","eyeRotation","eyeReaction","batSpeedKph","attackAngle","onPlane","batAngle","exitVelKph","launchAngle","hardHitPct","maxDist","eccDecRfd","eccBrakingRfd","trunkL","trunkR","bodyFatPct","smm","weight","ffmi","memo"];
+  const ids=["playerName","date","height","eyeHorizontal","eyeDiagonal","eyeRotation","eyeReaction","batSpeedKph","attackAngle","onPlane","batAngle","exitVelKph","launchAngle","hardHitPct","maxDist","eccDecRfd","eccBrakingRfd","trunkL","trunkR","imtp","plyoPushUp","bodyFatPct","smm","weight","ffmi","memo"];
   const D={};ids.forEach(id=>D[id]=getVal(id));
   D.eyeHorizontal=getSel('eye-horizontal');
   D.eyeDiagonal=getSel('eye-diagonal');
@@ -464,12 +476,14 @@ function renderReport(){
   }
 
   const sEccDec=calcScore("eccDecRfd",D.eccDecRfd);
+  const sImtp=calcScore("imtp",D.imtp);
+  const sPlyoPush=calcScore("plyoPushUp",D.plyoPushUp);
   const sEccBrk=calcScore("eccBrakingRfd",D.eccBrakingRfd);
   const trunkAvgVal=(parseFloat(D.trunkL||0)+parseFloat(D.trunkR||0))/2||null;
   const sTrunk=trunkAvgVal?calcScore("trunkAvg",trunkAvgVal):null;
   const valdSection=`
     <div class="card" style="border-color:#a78bfa44;">
-      <div class="sec-title" style="color:#a78bfa;border-color:#a78bfa44;">VALD</div>
+      <div class="sec-title" style="color:#a78bfa;border-color:#a78bfa44;">VALD・DynaMo</div>
       <div class="grid2" style="margin-bottom:16px;">
         <div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -496,6 +510,22 @@ function renderReport(){
         </div>
         ${asymBarHTML(D.trunkL,D.trunkR)}
       </div>
+      <div class="grid2" style="margin-top:12px;">
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="color:#a78bfa;font-size:11px;font-weight:700;">Isometric Mid-Thigh Pull</span>
+            ${gradeSmall(sImtp)}
+          </div>
+          <div class="stat-card"><div class="stat-label">Value（基準: 4,000 N）</div><div class="stat-val" style="color:${D.imtp?"#f1f5f9":"#334155"};">${D.imtp?Number(D.imtp).toLocaleString():"—"}${D.imtp?" N":""}</div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="color:#a78bfa;font-size:11px;font-weight:700;">Plyometric Push UP</span>
+            ${gradeSmall(sPlyoPush)}
+          </div>
+          <div class="stat-card"><div class="stat-label">Value（基準: 1,500 N）</div><div class="stat-val" style="color:${D.plyoPushUp?"#f1f5f9":"#334155"};">${D.plyoPushUp?Number(D.plyoPushUp).toLocaleString():"—"}${D.plyoPushUp?" N":""}</div></div>
+        </div>
+      </div>
     </div>`;
 
   // VALDをMLB比較テーブルに追加
@@ -503,6 +533,8 @@ function renderReport(){
     {label:"Eccentric Deceleration RFD",pv:D.eccDecRfd,ref:50000,unit:"N"},
     {label:"Eccentric Braking RFD",pv:D.eccBrakingRfd,ref:30000,unit:"N"},
     {label:"Trunk Rotation (Avg)",pv:trunkAvgVal?trunkAvgVal.toFixed(0):null,ref:500,unit:"N"},
+    {label:"Isometric Mid-Thigh Pull",pv:D.imtp,ref:4000,unit:"N"},
+    {label:"Plyometric Push UP",pv:D.plyoPushUp,ref:1500,unit:"N"},
   ].map(({label,pv,ref,unit},i)=>{
     const s=pv?Math.min(100,Math.max(0,Math.round(parseFloat(pv)/ref*70))):null;
     const diff=pv?(parseFloat(pv)-ref).toFixed(0):null;
