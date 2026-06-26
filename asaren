@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>DSC WEST 本気の朝練</title>
+<style>
+  :root {
+    --bg: #16181C;
+    --card: #1D2026;
+    --border: #2A2D33;
+    --text: #E7E9EC;
+    --muted: #8B8F98;
+    --muted2: #6B7280;
+    --orange: #FF6B35;
+    --lime: #C8FF3D;
+    --gold: #FFD23F;
+    --pink: #FF3D7A;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif;
+  }
+  .page {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 28px 18px 60px;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideToast { from { transform: translate(-50%, -16px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  .toast {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--card);
+    border: 1px solid var(--orange);
+    border-radius: 12px;
+    padding: 10px 16px;
+    display: none;
+    align-items: center;
+    font-size: 14px;
+    z-index: 50;
+    animation: slideToast 0.35s ease-out;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    white-space: nowrap;
+  }
+  .toast.show { display: flex; }
+  .toast svg { flex-shrink: 0; }
+  .toast .label { margin-left: 8px; }
+
+  header { margin-bottom: 24px; animation: fadeUp 0.4s ease-out; }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--orange);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+  h1 .accent { color: var(--orange); }
+  .subtitle { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+  .progress-card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 20px 20px 18px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    animation: fadeUp 0.45s ease-out;
+  }
+  .progress-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .big-count { font-size: 40px; font-weight: 800; color: #fff; line-height: 1; }
+  .big-count .unit { font-size: 15px; color: var(--muted2); font-weight: 500; margin-left: 6px; }
+  .track { height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; margin-bottom: 12px; }
+  .track-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--orange), var(--lime));
+    border-radius: 999px;
+    transition: width 0.4s ease-out;
+    width: 0%;
+  }
+  .next-line { font-size: 13px; color: #B4B8C0; }
+  .next-line strong { font-weight: 700; }
+
+  .milestone-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 22px;
+  }
+  .milestone-chip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 4px;
+    text-align: center;
+    transition: opacity 0.3s, border-color 0.3s;
+    opacity: 0.35;
+  }
+  .milestone-chip.earned { opacity: 1; }
+  .milestone-chip svg { display: inline-block; }
+  .milestone-count { font-size: 11px; font-weight: 700; margin-top: 4px; color: var(--text); }
+  .milestone-label { font-size: 9px; color: var(--muted); margin-top: 2px; line-height: 1.25; }
+
+  .month-label { font-size: 13px; font-weight: 700; color: var(--orange); margin-bottom: 8px; padding-left: 2px; }
+  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 22px; }
+  .day-cell {
+    border: none;
+    border-radius: 10px;
+    height: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    font-family: inherit;
+    background: #1D2026;
+    color: #9CA3AF;
+    padding: 0;
+  }
+  .day-cell.on { background: var(--orange); color: #16181C; }
+  .day-cell.today { box-shadow: 0 0 0 2px var(--lime) inset; }
+  .day-cell:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+  .day-weekday { font-size: 10px; opacity: 0.8; }
+  .day-num { font-size: 16px; font-weight: 700; margin-top: 2px; }
+
+  footer { text-align: center; font-size: 11px; color: #5C606A; margin-top: 24px; }
+  .loading { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">
+  <span id="toastIcon"></span>
+  <span class="label" id="toastLabel"></span>
+</div>
+
+<div class="page">
+  <header>
+    <div class="eyebrow">DSCWEST &middot; 夏休みMorningEarlyWork</div>
+    <h1>DSC WEST<span class="accent">本気の朝練</span></h1>
+    <div class="subtitle">7/20(月) – 8/28(金) ・ 平日 AM9:00–10:30</div>
+  </header>
+
+  <section class="progress-card">
+    <div class="progress-top">
+      <div class="big-count"><span id="countNum">0</span><span class="unit" id="countUnit">/ 30日</span></div>
+      <span id="dumbbellIcon"></span>
+    </div>
+    <div class="track"><div class="track-fill" id="trackFill"></div></div>
+    <div class="next-line" id="nextLine"></div>
+  </section>
+
+  <section class="milestone-row" id="milestoneRow"></section>
+
+  <section id="calendar"></section>
+
+  <footer>出席した日をタップでチェック。データはこの端末（このブラウザ）に保存されます。</footer>
+</div>
+
+<script>
+// ---------- Icons (minimal inline SVG, lucide-style) ----------
+function icon(name, color, size) {
+  size = size || 18;
+  const paths = {
+    droplet: '<path d="M12 2.69s-5.5 5.34-5.5 9.86a5.5 5.5 0 1 0 11 0c0-4.52-5.5-9.86-5.5-9.86z"/>',
+    shirt: '<path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/>',
+    glasses: '<circle cx="6" cy="15" r="4"/><circle cx="18" cy="15" r="4"/><path d="M14 15a2 2 0 0 0-2-2 2 2 0 0 0-2 2M2.5 13 5 7c.7-1.3 1.4-2 3-2M21.5 13 19 7c-.7-1.3-1.4-2-3-2"/>',
+    trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+    dumbbell: '<path d="M14.4 14.4 9.6 9.6M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="m21.5 21.5-1.4-1.4M3.9 3.9l1.4 1.4M21.5 2.5l-1.4 1.4M3.9 20.1l1.4-1.4"/>',
+    sunrise: '<path d="M12 2v8M4.93 10.93l1.41 1.41M2 18h2M20 18h2M19.07 10.93l-1.41 1.41M22 22H2M16 6l-4 4-4-4M16 18a4 4 0 0 0-8 0"/>'
+  };
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths[name] || ''}</svg>`;
+}
+
+// ---------- Sessions: weekdays from 2026-07-20 to 2026-08-28 ----------
+function buildSessionDates() {
+  const start = new Date(2026, 6, 20);
+  const end = new Date(2026, 7, 28);
+  const dates = [];
+  const d = new Date(start);
+  while (d <= end) {
+    const day = d.getDay();
+    if (day !== 0 && day !== 6) dates.push(new Date(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return dates;
+}
+const SESSIONS = buildSessionDates();
+const WEEKDAY_JP = ["日","月","火","水","木","金","土"];
+
+const MILESTONES = [
+  { count: 5, label: "ボトル", icon: "droplet", color: "#C8FF3D" },
+  { count: 15, label: "プロテイン / BCAA / Tシャツ", icon: "shirt", color: "#FF6B35" },
+  { count: 20, label: "サングラス", icon: "glasses", color: "#FFD23F" },
+  { count: 25, label: "ベンケイ / ムサシ", icon: "trophy", color: "#FF3D7A" },
+];
+
+const STORAGE_KEY = "dscwest_attended_v1";
+
+function loadAttended() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+function saveAttended(obj) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+  } catch (e) {
+    console.error("Storage error", e);
+  }
+}
+
+function toDateKey(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+let attended = loadAttended();
+
+function render() {
+  const count = Object.keys(attended).length;
+
+  document.getElementById("countNum").textContent = count;
+  document.getElementById("countUnit").textContent = `/ ${SESSIONS.length}日`;
+  document.getElementById("dumbbellIcon").innerHTML = icon("dumbbell", "#C8FF3D", 26);
+  document.getElementById("trackFill").style.width = Math.min(100, (count / SESSIONS.length) * 100) + "%";
+
+  const next = MILESTONES.find(m => m.count > count);
+  const nextLine = document.getElementById("nextLine");
+  if (next) {
+    nextLine.innerHTML = `あと<strong style="color:#FF6B35">${next.count - count}日</strong>で<strong style="color:${next.color}"> ${next.label}</strong>`;
+  } else {
+    nextLine.textContent = "全特典コンプリート🔥 お疲れさん！";
+  }
+
+  const row = document.getElementById("milestoneRow");
+  row.innerHTML = "";
+  MILESTONES.forEach(m => {
+    const earned = count >= m.count;
+    const chip = document.createElement("div");
+    chip.className = "milestone-chip" + (earned ? " earned" : "");
+    chip.style.borderColor = earned ? m.color : "#2A2D33";
+    chip.innerHTML = `
+      ${icon(m.icon, earned ? m.color : "#6B7280", 18)}
+      <div class="milestone-count">${m.count}日</div>
+      <div class="milestone-label">${m.label}</div>
+    `;
+    row.appendChild(chip);
+  });
+
+  const cal = document.getElementById("calendar");
+  cal.innerHTML = "";
+  const groups = {};
+  SESSIONS.forEach(d => {
+    const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+    if (!groups[key]) groups[key] = { label: `${d.getMonth() + 1}月`, dates: [] };
+    groups[key].dates.push(d);
+  });
+  const todayKey = toDateKey(new Date());
+
+  Object.values(groups).forEach(group => {
+    const wrap = document.createElement("div");
+    wrap.style.marginBottom = "22px";
+    const label = document.createElement("div");
+    label.className = "month-label";
+    label.textContent = group.label;
+    wrap.appendChild(label);
+
+    const grid = document.createElement("div");
+    grid.className = "grid";
+    group.dates.forEach(d => {
+      const key = toDateKey(d);
+      const isOn = !!attended[key];
+      const isToday = key === todayKey;
+      const btn = document.createElement("button");
+      btn.className = "day-cell" + (isOn ? " on" : "") + (isToday ? " today" : "");
+      btn.setAttribute("aria-pressed", isOn ? "true" : "false");
+      btn.setAttribute("aria-label", `${d.getMonth()+1}/${d.getDate()} ${WEEKDAY_JP[d.getDay()]}曜日 ${isOn ? "出席済み" : "未チェック"}`);
+      btn.innerHTML = `<span class="day-weekday">${WEEKDAY_JP[d.getDay()]}</span><span class="day-num">${d.getDate()}</span>`;
+      btn.addEventListener("click", () => toggleDay(key));
+      grid.appendChild(btn);
+    });
+    wrap.appendChild(grid);
+    cal.appendChild(wrap);
+  });
+}
+
+function toggleDay(key) {
+  const wasOn = !!attended[key];
+  if (wasOn) {
+    delete attended[key];
+  } else {
+    attended[key] = true;
+  }
+  saveAttended(attended);
+
+  if (!wasOn) {
+    const newCount = Object.keys(attended).length;
+    const hit = MILESTONES.find(m => m.count === newCount);
+    if (hit) showToast(hit);
+  }
+  render();
+}
+
+function showToast(m) {
+  const toast = document.getElementById("toast");
+  document.getElementById("toastIcon").innerHTML = icon(m.icon, m.color, 20);
+  document.getElementById("toastLabel").innerHTML = `${m.count}日達成！<strong style="color:${m.color}">${m.label}</strong> 獲得`;
+  toast.classList.add("show");
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+}
+
+render();
+</script>
+</body>
+</html>
