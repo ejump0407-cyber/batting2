@@ -139,6 +139,9 @@
   }
   .day-cell.on { background: var(--orange); color: #16181C; }
   .day-cell.today { box-shadow: 0 0 0 2px var(--lime) inset; }
+  .day-cell.locked { cursor: default; opacity: 0.45; }
+  .day-cell.locked.on { opacity: 0.7; }
+  .day-cell:disabled { cursor: default; }
   .day-cell:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
   .day-weekday { font-size: 10px; opacity: 0.8; }
   .day-num { font-size: 16px; font-weight: 700; margin-top: 2px; }
@@ -174,7 +177,7 @@
 
   <section id="calendar"></section>
 
-  <footer>出席した日をタップでチェック。データはこの端末（このブラウザ）に保存されます。</footer>
+  <footer>当日のみチェックできます。過去・未来の日付は操作できません。データはこの端末（このブラウザ）に保存されます。</footer>
 </div>
 
 <script>
@@ -297,12 +300,16 @@ function render() {
       const key = toDateKey(d);
       const isOn = !!attended[key];
       const isToday = key === todayKey;
+      const isLocked = !isToday;
       const btn = document.createElement("button");
-      btn.className = "day-cell" + (isOn ? " on" : "") + (isToday ? " today" : "");
+      btn.className = "day-cell" + (isOn ? " on" : "") + (isToday ? " today" : "") + (isLocked ? " locked" : "");
       btn.setAttribute("aria-pressed", isOn ? "true" : "false");
-      btn.setAttribute("aria-label", `${d.getMonth()+1}/${d.getDate()} ${WEEKDAY_JP[d.getDay()]}曜日 ${isOn ? "出席済み" : "未チェック"}`);
+      btn.disabled = isLocked;
+      btn.setAttribute("aria-label", `${d.getMonth()+1}/${d.getDate()} ${WEEKDAY_JP[d.getDay()]}曜日 ${isOn ? "出席済み" : (isLocked ? "本日以外は操作できません" : "未チェック")}`);
       btn.innerHTML = `<span class="day-weekday">${WEEKDAY_JP[d.getDay()]}</span><span class="day-num">${d.getDate()}</span>`;
-      btn.addEventListener("click", () => toggleDay(key));
+      if (!isLocked) {
+        btn.addEventListener("click", () => toggleDay(key));
+      }
       grid.appendChild(btn);
     });
     wrap.appendChild(grid);
